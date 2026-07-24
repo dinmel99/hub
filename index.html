@@ -186,6 +186,7 @@
 <script>
 const picked = new Set();
 let recommendedContractor = null;
+const SESSION_KEY = 'izhs_session';
 
 document.getElementById('btnEnter').addEventListener('click', ()=>{
   document.getElementById('welcome').classList.add('hidden');
@@ -246,20 +247,53 @@ function updateFloatbar(){
 }
 document.getElementById('clientName').addEventListener('input', updateFloatbar);
 
+// Поля клиента в шапке хаба тоже должны писать в общую сессию —
+// иначе, если агент заполнил их прямо здесь, а не в карте/КП, они потеряются.
+function saveHubFieldsToSession(){
+  const patch = {};
+  const name = document.getElementById('clientName').value;
+  const budget = document.getElementById('budget').value;
+  const location = document.getElementById('location').value;
+  const technology = document.getElementById('technology').value;
+  if(name) patch.clientName = name;
+  if(budget) patch.budget = budget;
+  if(location) patch.location = location;
+  if(technology) patch.technology = technology;
+  if(Object.keys(patch).length){
+    const merged = Object.assign(loadSessionRaw(), patch, {updatedAt: Date.now()});
+    localStorage.setItem(SESSION_KEY, JSON.stringify(merged));
+  }
+}
+function loadSessionRaw(){
+  try{ return JSON.parse(localStorage.getItem(SESSION_KEY)) || {}; }catch(e){ return {}; }
+}
+['clientName','budget','location','technology'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', saveHubFieldsToSession);
+});
+// Подтягиваем поля клиента, если они уже были заполнены в другом инструменте
+(function prefillHubFields(){
+  const s = loadSessionRaw();
+  if(s.clientName) document.getElementById('clientName').value = s.clientName;
+  if(s.budget) document.getElementById('budget').value = s.budget;
+  if(s.location) document.getElementById('location').value = s.location;
+  if(s.technology) document.getElementById('technology').value = s.technology;
+})();
+
 document.getElementById('btnKp').addEventListener('click', ()=>{
-  const name = document.getElementById('clientName').value || 'клиента';
-  alert('В рабочей версии откроется /kp/ с предзаполненными данными по '+name+' и '+picked.size+' выбранными позициями.');
+  saveHubFieldsToSession();
+  window.open('https://dinmel99.github.io/kp/', '_blank');
 });
 document.getElementById('btnMeet').addEventListener('click', ()=>{
-  alert('В рабочей версии здесь откроется форма записи на встречу с куратором ИЖС.');
+  saveHubFieldsToSession();
+  // Заглушка до отдельной формы записи на встречу — пока ведём в тот же
+  // Telegram куратора, что уже используется в конструкторе домов.
+  window.open('https://t.me/din_mel99', '_blank');
 });
 
 updateFloatbar();
 
-// Слушаем сессию из вложенной карты (dinmel99.github.io/partners/).
-// Карта пишет выбор в localStorage на своём происхождении и дублирует его
-// через postMessage — так счётчик здесь обновляется даже во вложенном превью.
-const SESSION_KEY = 'izhs_session';
+// Синхронизация с сессией: хаб и инструменты (partners/houses/contractors)
+// теперь на одном домене, поэтому localStorage у них общий.
 
 function syncFromSessionObject(s){
   s = s || {};
