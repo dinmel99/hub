@@ -298,6 +298,11 @@ window.addEventListener('message', (e)=>{
 
 // Подхватываем то, что уже лежит в сессии на момент открытия хаба.
 readAndSyncSession();
+
+// Подстраховка: 'storage' событие в связке iframe-родитель не всегда
+// одинаково надёжно ведёт себя между браузерами — на всякий случай
+// перечитываем localStorage раз в 1.5с, это дёшево и гарантирует результат.
+setInterval(readAndSyncSession, 1500);
 </script>
 </body>
 </html>
