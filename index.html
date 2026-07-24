@@ -110,7 +110,10 @@
 <div id="main" class="hidden">
   <div class="topbar">
     <div class="brand"><span class="dot"></span><div>Простор · ИЖС<small>Единый вход · прототип</small></div></div>
-    <div class="locbadge">Московская область</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button id="btnReset" style="background:transparent;color:#C9C9C6;border:1px solid #46473F;border-radius:999px;padding:5px 12px;font-family:inherit;font-size:12.5px;cursor:pointer;">↺ Новый клиент</button>
+      <div class="locbadge">Московская область</div>
+    </div>
   </div>
 
   <div class="wrap">
@@ -141,6 +144,7 @@
       <div class="maptoggle">
         <button class="active" id="viewList">Список</button>
         <button id="viewMap">Карта</button>
+        <button id="btnMapFullscreen" class="hidden" style="margin-left:auto;">⛶ На весь экран</button>
       </div>
       <div class="panel" id="settlementsList">
         <div class="listrow"><div><div class="name">Лесной берег</div><div class="meta">Новорижское ш., 24 км, от 5,8 млн ₽</div></div><button class="pickbtn" data-key="s1">Выбрать</button></div>
@@ -148,7 +152,7 @@
         <div class="listrow"><div><div class="name">Сысоево парк</div><div class="meta">Симферопольское ш., 28 км, от 6,1 млн ₽</div></div><button class="pickbtn" data-key="s3">Выбрать</button></div>
       </div>
       <div class="panel hidden" id="settlementsMap" style="padding:0;overflow:hidden;">
-        <iframe src="https://dinmel99.github.io/partners/" style="width:100%;height:560px;border:none;display:block;"
+        <iframe id="mapIframe" src="https://dinmel99.github.io/partners/" style="width:100%;height:min(78vh,760px);border:none;display:block;"
           title="Карта партнёрских посёлков" loading="lazy"></iframe>
       </div>
     </div>
@@ -208,12 +212,19 @@ document.getElementById('viewList').addEventListener('click', ()=>{
   document.getElementById('viewMap').classList.remove('active');
   document.getElementById('settlementsList').classList.remove('hidden');
   document.getElementById('settlementsMap').classList.add('hidden');
+  document.getElementById('btnMapFullscreen').classList.add('hidden');
 });
 document.getElementById('viewMap').addEventListener('click', ()=>{
   document.getElementById('viewMap').classList.add('active');
   document.getElementById('viewList').classList.remove('active');
   document.getElementById('settlementsMap').classList.remove('hidden');
   document.getElementById('settlementsList').classList.add('hidden');
+  document.getElementById('btnMapFullscreen').classList.remove('hidden');
+});
+document.getElementById('btnMapFullscreen').addEventListener('click', ()=>{
+  const el = document.getElementById('mapIframe');
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  if(req) req.call(el);
 });
 
 document.querySelectorAll('.subtab').forEach(t=>{
@@ -278,6 +289,15 @@ function loadSessionRaw(){
   if(s.location) document.getElementById('location').value = s.location;
   if(s.technology) document.getElementById('technology').value = s.technology;
 })();
+
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  if(!confirm('Сбросить весь текущий подбор (клиент, посёлки, дома)? Отменить будет нельзя — пригодится перед началом работы с новым клиентом.')) return;
+  localStorage.removeItem(SESSION_KEY);
+  picked.clear();
+  recommendedContractor = null;
+  ['clientName','budget','location','technology'].forEach(id=>{ document.getElementById(id).value=''; });
+  updateFloatbar();
+});
 
 document.getElementById('btnKp').addEventListener('click', ()=>{
   saveHubFieldsToSession();
