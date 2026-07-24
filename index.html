@@ -185,6 +185,7 @@
 
 <script>
 const picked = new Set();
+let recommendedContractor = null;
 
 document.getElementById('btnEnter').addEventListener('click', ()=>{
   document.getElementById('welcome').classList.add('hidden');
@@ -258,7 +259,6 @@ updateFloatbar();
 // Слушаем сессию из вложенной карты (dinmel99.github.io/partners/).
 // Карта пишет выбор в localStorage на своём происхождении и дублирует его
 // через postMessage — так счётчик здесь обновляется даже во вложенном превью.
-let recommendedContractor = null;
 const SESSION_KEY = 'izhs_session';
 
 function syncFromSessionObject(s){
