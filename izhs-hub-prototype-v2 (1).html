@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Простор · ИЖС — единый вход (прототип v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --orange:#FF8001; --orange-dark:#DB6C00;
+    --blue:#017AB3; --blue-dark:#015E8A;
+    --paper:#FBF8F4; --ink:#20211F; --ink-soft:#5B5C58;
+    --line:#E7E1D6; --good:#1E8A54; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;}
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+  button{font-family:inherit;cursor:pointer;}
+  .hidden{display:none !important;}
+
+  /* ---------- welcome ---------- */
+  #welcome{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;}
+  #welcome .dot{width:10px;height:10px;border-radius:50%;background:var(--orange);display:inline-block;margin-right:8px;}
+  #welcome .eyebrow{font-size:13px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;}
+  #welcome h1{font-size:38px;max-width:640px;line-height:1.2;margin-bottom:16px;}
+  #welcome p{font-size:15px;color:var(--ink-soft);max-width:480px;line-height:1.55;margin-bottom:30px;}
+  #welcome .goal{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;max-width:480px;margin-bottom:30px;font-size:13.5px;color:var(--ink-soft);text-align:left;}
+  #welcome .goal b{color:var(--ink);}
+  .btn-start{background:var(--orange);color:#fff;border:none;border-radius:12px;padding:15px 30px;font-size:15px;font-weight:700;}
+  .btn-start:hover{background:var(--orange-dark);}
+
+  /* ---------- main ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--ink);color:#fff;position:sticky;top:0;z-index:50;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--orange);}
+  .brand small{display:block;font-weight:400;color:#C9C9C6;font-size:12px;}
+  .locbadge{font-size:13px;color:#C9C9C6;border:1px solid #46473F;padding:5px 12px;border-radius:999px;}
+
+  .wrap{max-width:920px;margin:0 auto;padding:20px 20px 120px;}
+
+  .clientbar{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+  .clientbar input{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13.5px;width:100%;}
+  .clientbar label{display:block;font-size:11px;color:var(--ink-soft);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  @media (max-width:700px){.clientbar{grid-template-columns:1fr 1fr;}}
+
+  .categories{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+  .catcard{background:#fff;border:2px solid var(--line);border-radius:var(--radius);padding:20px;text-align:left;}
+  .catcard.active{border-color:var(--orange);}
+  .catcard .icon{font-size:22px;margin-bottom:8px;}
+  .catcard h3{font-size:17px;margin-bottom:4px;}
+  .catcard .sub{font-size:12.5px;color:var(--ink-soft);}
+
+  .subtabs{display:flex;gap:6px;margin-bottom:14px;}
+  .subtab{padding:8px 16px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--ink-soft);border:1px solid var(--line);background:#fff;}
+  .subtab.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:20px;}
+
+  .listrow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dotted var(--line);}
+  .listrow:last-child{border-bottom:none;}
+  .listrow .name{font-weight:600;font-size:14px;}
+  .listrow .meta{font-size:12.5px;color:var(--ink-soft);}
+  .pickbtn{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;}
+  .pickbtn.picked{background:var(--good);border-color:var(--good);color:#fff;}
+
+  .mapbox{height:220px;border-radius:12px;background:#EAF2EC;position:relative;overflow:hidden;border:1px solid var(--line);}
+  .mapbox .pin{position:absolute;width:14px;height:14px;border-radius:50% 50% 50% 0;background:var(--orange);transform:rotate(-45deg);}
+  .maptoggle{display:flex;gap:6px;margin-bottom:12px;}
+  .maptoggle button{padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12.5px;font-weight:600;}
+  .maptoggle button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .quizrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+  .quizrow select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13.5px;}
+  .quizbtn{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:700;}
+  .quizbtn:hover{background:var(--blue-dark);}
+
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  @media (max-width:700px){.grid3{grid-template-columns:1fr 1fr;}}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:13px;display:flex;flex-direction:column;gap:5px;}
+  .card .tag{font-size:10px;text-transform:uppercase;color:var(--blue);font-weight:700;letter-spacing:.04em;}
+  .card h4{font-size:14px;margin:0;}
+  .card .price{font-size:12.5px;color:var(--orange-dark);font-weight:700;}
+  .card button{margin-top:auto;}
+
+  .floatbar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;z-index:60;flex-wrap:wrap;}
+  .floatbar .who{font-size:13px;color:#D9D9D5;}
+  .floatbar .who b{color:#fff;}
+  .floatbar .actions{display:flex;gap:10px;}
+  .btn-kp{background:var(--orange);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-weight:700;font-size:13.5px;}
+  .btn-kp:disabled{background:#5B4A3A;color:#B8AFA4;cursor:not-allowed;}
+  .btn-meet{background:transparent;color:#fff;border:1px solid #5C5D57;border-radius:10px;padding:11px 18px;font-weight:700;font-size:13.5px;}
+  .btn-meet:hover{border-color:#fff;}
+  .note{font-size:12px;color:var(--ink-soft);margin-bottom:14px;}
+</style>
+</head>
+<body>
+
+<!-- ============ WELCOME ============ -->
+<div id="welcome">
+  <div class="eyebrow"><span class="dot"></span>Простор · ИЖС</div>
+  <h1>Быстрый подбор для клиента по загородной недвижимости</h1>
+  <p>Соберите посёлок, проект дома и подрядчика под параметры клиента — за пару минут, чтобы дальше назначить встречу с куратором направления.</p>
+  <div class="goal"><b>Как это работает:</b> подобрали сами — соберите КП одной кнопкой. Не уверены или не хватило вариантов — назначьте встречу с куратором, он доведёт клиента дальше.</div>
+  <button class="btn-start" id="btnEnter">Начать подбор →</button>
+</div>
+
+<!-- ============ MAIN ============ -->
+<div id="main" class="hidden">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span><div>Простор · ИЖС<small>Единый вход · прототип</small></div></div>
+    <div class="locbadge">Московская область</div>
+  </div>
+
+  <div class="wrap">
+    <p class="note">Прототип: категории, вкладки и карточки кликабельны, данные никуда не сохраняются.</p>
+
+    <div class="clientbar">
+      <div><label>Клиент</label><input id="clientName" placeholder="Александр"></div>
+      <div><label>Бюджет, ₽</label><input id="budget" placeholder="6 000 000"></div>
+      <div><label>Направление</label><input id="location" placeholder="Новорижское"></div>
+      <div><label>Технология</label><input id="technology" placeholder="Каркасная"></div>
+    </div>
+
+    <div class="categories">
+      <div class="catcard" id="catSettlements">
+        <div class="icon">🏘️</div>
+        <h3>Посёлки</h3>
+        <div class="sub">Список или карта партнёрских посёлков</div>
+      </div>
+      <div class="catcard" id="catContractors">
+        <div class="icon">🛠️</div>
+        <h3>Подрядчики</h3>
+        <div class="sub">Квиз-подбор или каталог проектов домов</div>
+      </div>
+    </div>
+
+    <!-- ---- settlements panel ---- -->
+    <div id="panelSettlements" class="hidden">
+      <div class="maptoggle">
+        <button class="active" id="viewList">Список</button>
+        <button id="viewMap">Карта</button>
+      </div>
+      <div class="panel" id="settlementsList">
+        <div class="listrow"><div><div class="name">Лесной берег</div><div class="meta">Новорижское ш., 24 км, от 5,8 млн ₽</div></div><button class="pickbtn" data-key="s1">Выбрать</button></div>
+        <div class="listrow"><div><div class="name">Заречье парк</div><div class="meta">Каширское ш., 30 км, от 4,2 млн ₽</div></div><button class="pickbtn" data-key="s2">Выбрать</button></div>
+        <div class="listrow"><div><div class="name">Сысоево парк</div><div class="meta">Симферопольское ш., 28 км, от 6,1 млн ₽</div></div><button class="pickbtn" data-key="s3">Выбрать</button></div>
+      </div>
+      <div class="panel hidden" id="settlementsMap" style="padding:0;overflow:hidden;">
+        <iframe src="https://dinmel99.github.io/partners/" style="width:100%;height:560px;border:none;display:block;"
+          title="Карта партнёрских посёлков" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- ---- contractors panel ---- -->
+    <div id="panelContractors" class="hidden">
+      <div class="subtabs">
+        <div class="subtab active" data-sub="quiz">Квиз</div>
+        <div class="subtab" data-sub="projects">Подбор проектов</div>
+      </div>
+
+      <div class="panel" id="subQuiz" style="padding:0;overflow:hidden;">
+        <iframe src="https://dinmel99.github.io/contractors/" style="width:100%;height:640px;border:none;display:block;"
+          title="Квиз подбора подрядчика" loading="lazy"></iframe>
+      </div>
+
+      <div class="panel hidden" id="subProjects" style="padding:0;overflow:hidden;">
+        <iframe src="https://dinmel99.github.io/houses/" style="width:100%;height:640px;border:none;display:block;"
+          title="Конструктор проектов домов" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <p class="hidden" id="emptyHint" style="color:var(--ink-soft);font-size:13.5px;">Выберите «Посёлки» или «Подрядчики», чтобы начать подбор.</p>
+  </div>
+
+  <div class="floatbar">
+    <div class="who">Клиент: <b id="fbName">—</b> · выбрано <b id="fbCount">0</b> позиции<span id="fbContractor"></span></div>
+    <div class="actions">
+      <button class="btn-kp" id="btnKp" disabled>Собрать КП</button>
+      <button class="btn-meet" id="btnMeet">Назначить встречу с куратором</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const picked = new Set();
+
+document.getElementById('btnEnter').addEventListener('click', ()=>{
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('main').classList.remove('hidden');
+});
+
+function togglePanel(which){
+  document.getElementById('panelSettlements').classList.toggle('hidden', which!=='settlements');
+  document.getElementById('panelContractors').classList.toggle('hidden', which!=='contractors');
+  document.getElementById('catSettlements').classList.toggle('active', which==='settlements');
+  document.getElementById('catContractors').classList.toggle('active', which==='contractors');
+  document.getElementById('emptyHint').classList.add('hidden');
+}
+document.getElementById('catSettlements').addEventListener('click', ()=>togglePanel('settlements'));
+document.getElementById('catContractors').addEventListener('click', ()=>togglePanel('contractors'));
+
+document.getElementById('viewList').addEventListener('click', ()=>{
+  document.getElementById('viewList').classList.add('active');
+  document.getElementById('viewMap').classList.remove('active');
+  document.getElementById('settlementsList').classList.remove('hidden');
+  document.getElementById('settlementsMap').classList.add('hidden');
+});
+document.getElementById('viewMap').addEventListener('click', ()=>{
+  document.getElementById('viewMap').classList.add('active');
+  document.getElementById('viewList').classList.remove('active');
+  document.getElementById('settlementsMap').classList.remove('hidden');
+  document.getElementById('settlementsList').classList.add('hidden');
+});
+
+document.querySelectorAll('.subtab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.subtab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const sub = t.dataset.sub;
+    document.getElementById('subQuiz').classList.toggle('hidden', sub!=='quiz');
+    document.getElementById('subProjects').classList.toggle('hidden', sub!=='projects');
+  });
+});
+
+function wirePickButtons(){
+  document.querySelectorAll('.pickbtn').forEach(btn=>{
+    btn.onclick = ()=>{
+      const key = btn.dataset.key;
+      if(picked.has(key)){ picked.delete(key); btn.classList.remove('picked'); btn.textContent='Выбрать'; }
+      else{ picked.add(key); btn.classList.add('picked'); btn.textContent='Выбрано'; }
+      updateFloatbar();
+    };
+  });
+}
+wirePickButtons();
+
+function updateFloatbar(){
+  document.getElementById('fbCount').textContent = picked.size;
+  document.getElementById('fbName').textContent = document.getElementById('clientName').value || '—';
+  document.getElementById('btnKp').disabled = picked.size===0;
+  const cEl = document.getElementById('fbContractor');
+  if(cEl) cEl.textContent = recommendedContractor ? (' · подрядчик для себя: '+recommendedContractor) : '';
+}
+document.getElementById('clientName').addEventListener('input', updateFloatbar);
+
+document.getElementById('btnKp').addEventListener('click', ()=>{
+  const name = document.getElementById('clientName').value || 'клиента';
+  alert('В рабочей версии откроется /kp/ с предзаполненными данными по '+name+' и '+picked.size+' выбранными позициями.');
+});
+document.getElementById('btnMeet').addEventListener('click', ()=>{
+  alert('В рабочей версии здесь откроется форма записи на встречу с куратором ИЖС.');
+});
+
+updateFloatbar();
+
+// Слушаем сессию из вложенной карты (dinmel99.github.io/partners/).
+// Карта пишет выбор в localStorage на своём происхождении и дублирует его
+// через postMessage — так счётчик здесь обновляется даже во вложенном превью.
+let recommendedContractor = null;
+
+window.addEventListener('message', (e)=>{
+  if(!e.data || e.data.type!=='izhs_session_update') return;
+  const s = e.data.session || {};
+  picked.forEach(k=>{ if(k.startsWith('map-settlement:')||k.startsWith('map-house:')) picked.delete(k); });
+  (s.selectedSettlements||[]).forEach(x=>{ if(x.name) picked.add('map-settlement:'+x.name); });
+  (s.selectedHouseProjects||[]).forEach(x=>{ if(x.name) picked.add('map-house:'+x.name); });
+  // Подрядчик — справочная информация для агента, в счётчик КП не входит
+  // и в саму КП не попадает (это отдельный этап воронки — «встреча у подрядчика»).
+  if(s.selectedContractor && s.selectedContractor.name){
+    recommendedContractor = s.selectedContractor.name;
+  }
+  updateFloatbar();
+});
+</script>
+</body>
+</html>
