@@ -259,10 +259,10 @@ updateFloatbar();
 // Карта пишет выбор в localStorage на своём происхождении и дублирует его
 // через postMessage — так счётчик здесь обновляется даже во вложенном превью.
 let recommendedContractor = null;
+const SESSION_KEY = 'izhs_session';
 
-window.addEventListener('message', (e)=>{
-  if(!e.data || e.data.type!=='izhs_session_update') return;
-  const s = e.data.session || {};
+function syncFromSessionObject(s){
+  s = s || {};
   picked.forEach(k=>{ if(k.startsWith('map-settlement:')||k.startsWith('map-house:')) picked.delete(k); });
   (s.selectedSettlements||[]).forEach(x=>{ if(x.name) picked.add('map-settlement:'+x.name); });
   (s.selectedHouseProjects||[]).forEach(x=>{ if(x.name) picked.add('map-house:'+x.name); });
@@ -272,7 +272,32 @@ window.addEventListener('message', (e)=>{
     recommendedContractor = s.selectedContractor.name;
   }
   updateFloatbar();
+}
+
+function readAndSyncSession(){
+  try{
+    const raw = localStorage.getItem(SESSION_KEY);
+    syncFromSessionObject(raw ? JSON.parse(raw) : {});
+  }catch(e){ /* некорректный JSON в сессии — игнорируем */ }
+}
+
+// Основной путь: хаб и инструменты (partners/houses/contractors) теперь на одном
+// домене dinmel99.github.io, поэтому localStorage у них общий. Событие 'storage'
+// срабатывает в родительском окне, когда iframe меняет localStorage — этого
+// достаточно, без всякого моста через postMessage.
+window.addEventListener('storage', (e)=>{
+  if(e.key === SESSION_KEY) readAndSyncSession();
 });
+
+// Запасной путь: пригодится, только если хаб открыт как превью на другом домене
+// (например, здесь, в чате) — тогда localStorage у фрейма и родителя не общий.
+window.addEventListener('message', (e)=>{
+  if(!e.data || e.data.type!=='izhs_session_update') return;
+  syncFromSessionObject(e.data.session);
+});
+
+// Подхватываем то, что уже лежит в сессии на момент открытия хаба.
+readAndSyncSession();
 </script>
 </body>
 </html>
