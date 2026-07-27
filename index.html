@@ -62,8 +62,13 @@
   .listrow:last-child{border-bottom:none;}
   .listrow .name{font-weight:600;font-size:14px;}
   .listrow .meta{font-size:12.5px;color:var(--ink-soft);}
-  .pickbtn{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;}
+  .pickbtn{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;flex-shrink:0;}
   .pickbtn.picked{background:var(--good);border-color:var(--good);color:#fff;}
+  .listrow{gap:10px;}
+  .listrow .thumb{width:44px;height:44px;border-radius:8px;flex-shrink:0;background:var(--paper);border:1px solid var(--line);object-fit:cover;}
+  .listrow .thumb-empty{width:44px;height:44px;border-radius:8px;flex-shrink:0;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink-soft);}
+  .listrow .info{flex:1;min-width:0;}
+  .row-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:999px;margin-left:6px;background:var(--orange);color:#fff;vertical-align:middle;}
 
   .mapbox{height:220px;border-radius:12px;background:#EAF2EC;position:relative;overflow:hidden;border:1px solid var(--line);}
   .mapbox .pin{position:absolute;width:14px;height:14px;border-radius:50% 50% 50% 0;background:var(--orange);transform:rotate(-45deg);}
@@ -147,9 +152,8 @@
         <button id="btnMapFullscreen" class="hidden" style="margin-left:auto;">⛶ На весь экран</button>
       </div>
       <div class="panel" id="settlementsList">
-        <div class="listrow"><div><div class="name">Лесной берег</div><div class="meta">Новорижское ш., 24 км, от 5,8 млн ₽</div></div><button class="pickbtn" data-key="s1">Выбрать</button></div>
-        <div class="listrow"><div><div class="name">Заречье парк</div><div class="meta">Каширское ш., 30 км, от 4,2 млн ₽</div></div><button class="pickbtn" data-key="s2">Выбрать</button></div>
-        <div class="listrow"><div><div class="name">Сысоево парк</div><div class="meta">Симферопольское ш., 28 км, от 6,1 млн ₽</div></div><button class="pickbtn" data-key="s3">Выбрать</button></div>
+        <input id="settlementsSearch" type="text" placeholder="Поиск по названию, партнёру, направлению…" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:10px;">
+        <div id="settlementsListBody"><div class="note">Загружаю посёлки…</div></div>
       </div>
       <div class="panel hidden" id="settlementsMap" style="padding:0;overflow:hidden;">
         <iframe id="mapIframe" src="https://dinmel99.github.io/partners/" style="width:100%;height:min(78vh,760px);border:none;display:block;"
@@ -204,8 +208,105 @@ function togglePanel(which){
   document.getElementById('catContractors').classList.toggle('active', which==='contractors');
   document.getElementById('emptyHint').classList.add('hidden');
 }
-document.getElementById('catSettlements').addEventListener('click', ()=>togglePanel('settlements'));
+document.getElementById('catSettlements').addEventListener('click', ()=>{ togglePanel('settlements'); loadSettlementsOnce(); });
 document.getElementById('catContractors').addEventListener('click', ()=>togglePanel('contractors'));
+
+/* ======= реальные посёлки — тот же Apps Script, что и у карты ======= */
+const SETTLEMENTS_API = 'https://script.google.com/macros/s/AKfycbzzXSPtnnnE3999AlSvJGsMND4mnRxPrTImZvNCKkRYI8S4O9ouwP2SEamZdCs37V_2RA/exec';
+const SETTLEMENTS_COLMAP = {
+  'название':'name','партнёр':'partner','направление':'direction','шоссе':'highway',
+  'км от мкад':'km','статус':'status','тип':'type','цена зу (млн)':'price_land',
+  'цена дома (млн)':'price_house','класс':'klass','сайт':'site','заметки':'notes',
+  'фото':'photo','бейдж':'badge'
+};
+let SETTLEMENTS_DATA = [];
+let settlementsLoaded = false;
+
+function parseSettlementsRow(row){
+  const d = {};
+  Object.entries(row).forEach(([k,v])=>{
+    const mapped = SETTLEMENTS_COLMAP[k.toLowerCase().trim()];
+    if(mapped) d[mapped] = String(v||'').trim();
+  });
+  return d.name ? d : null;
+}
+
+async function loadSettlementsOnce(){
+  if(settlementsLoaded) return;
+  settlementsLoaded = true;
+  try{
+    const resp = await fetch(SETTLEMENTS_API + '?t=' + Date.now());
+    const json = await resp.json();
+    SETTLEMENTS_DATA = (Array.isArray(json) ? json : []).map(parseSettlementsRow).filter(Boolean);
+  }catch(e){
+    document.getElementById('settlementsListBody').innerHTML = '<div class="note">Не удалось загрузить посёлки — попробуй обновить страницу.</div>';
+    return;
+  }
+  renderSettlementsList();
+  document.getElementById('settlementsSearch').addEventListener('input', renderSettlementsList);
+}
+
+function renderSettlementsList(){
+  const q = (document.getElementById('settlementsSearch').value||'').toLowerCase().trim();
+  const body = document.getElementById('settlementsListBody');
+  const rows = SETTLEMENTS_DATA.filter(d=>{
+    if(!q) return true;
+    return (d.name+' '+d.partner+' '+d.direction).toLowerCase().includes(q);
+  });
+  if(!rows.length){ body.innerHTML = '<div class="note">Ничего не найдено.</div>'; return; }
+
+  body.innerHTML = rows.map((d,i)=>{
+    const thumb = d.photo
+      ? `<img class="thumb" src="${d.photo.replace(/"/g,'')}" alt="" onerror="this.outerHTML='<div class=&quot;thumb-empty&quot;>🏘</div>'">`
+      : `<div class="thumb-empty">🏘</div>`;
+    const priceParts = [];
+    if(d.price_land) priceParts.push('от '+d.price_land+' млн ₽ (ЗУ)');
+    if(d.price_house) priceParts.push('от '+d.price_house+' млн ₽ (дом)');
+    const priceLine = priceParts.length ? priceParts.join(' · ') : (d.status||'');
+    const badge = d.badge ? `<span class="row-badge">${d.badge}</span>` : '';
+    return `<div class="listrow">
+      ${thumb}
+      <div class="info">
+        <div class="name">${d.name}${badge}</div>
+        <div class="meta">${d.partner||''}${d.direction?' · '+d.direction:''}${d.km?', '+d.km+' км':''}</div>
+        <div class="meta">${priceLine}</div>
+      </div>
+      <button class="pickbtn" data-name="${d.name.replace(/"/g,'')}" data-idx="${i}">Выбрать</button>
+    </div>`;
+  }).join('');
+
+  body.querySelectorAll('.pickbtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const d = rows[parseInt(btn.dataset.idx,10)];
+      const s = loadSessionRaw();
+      const list = Array.isArray(s.selectedSettlements) ? s.selectedSettlements.slice() : [];
+      const idx = list.findIndex(x=>x.name===d.name);
+      let added;
+      if(idx>=0){ list.splice(idx,1); added=false; } else {
+        list.push({ name:d.name, partner:d.partner||'', direction:d.direction||'', priceLand:d.price_land?('от '+d.price_land+' млн ₽'):'', priceHouse:d.price_house||'', photo:d.photo||'', notes:d.notes||'' });
+        added = true;
+      }
+      const merged = Object.assign(loadSessionRaw(), {selectedSettlements:list, updatedAt:Date.now()});
+      localStorage.setItem(SESSION_KEY, JSON.stringify(merged));
+      btn.textContent = added ? '✓ Выбрано' : 'Выбрать';
+      btn.classList.toggle('picked', added);
+      readAndSyncSession();
+    });
+  });
+  refreshSettlementsPickState();
+}
+
+function refreshSettlementsPickState(){
+  const s = loadSessionRaw();
+  const names = new Set((s.selectedSettlements||[]).map(x=>x.name));
+  document.querySelectorAll('#settlementsListBody .pickbtn').forEach(btn=>{
+    const on = names.has(btn.dataset.name);
+    btn.classList.toggle('picked', on);
+    btn.textContent = on ? '✓ Выбрано' : 'Выбрать';
+  });
+}
+
+
 
 document.getElementById('viewList').addEventListener('click', ()=>{
   document.getElementById('viewList').classList.add('active');
