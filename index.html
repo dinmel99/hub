@@ -283,7 +283,7 @@ function renderSettlementsList(){
       const idx = list.findIndex(x=>x.name===d.name);
       let added;
       if(idx>=0){ list.splice(idx,1); added=false; } else {
-        list.push({ name:d.name, partner:d.partner||'', direction:d.direction||'', priceLand:d.price_land?('от '+d.price_land+' млн ₽'):'', priceHouse:d.price_house||'', photo:d.photo||'', notes:d.notes||'' });
+        list.push({ name:d.name, partner:d.partner||'', direction:d.direction||'', priceLand:d.price_land?('от '+d.price_land+' млн ₽'):'', priceHouse:d.price_house||'', photo:d.photo||'', notes:d.notes||'', site:d.site||'' });
         added = true;
       }
       const merged = Object.assign(loadSessionRaw(), {selectedSettlements:list, updatedAt:Date.now()});
