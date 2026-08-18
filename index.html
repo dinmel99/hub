@@ -401,6 +401,12 @@
           <span class="sub-icon">🏠</span> Проекты домов
         </button>
       </div>
+
+      <!-- Ограничения -->
+      <button class="nav-item" id="navZouit" data-panel="zouit">
+        <span class="nav-icon">⚠️</span>
+        <span class="nav-label">Ограничения</span>
+      </button>
     </nav>
 
     <!-- footer / actions -->
@@ -483,6 +489,16 @@
         title="Конструктор проектов домов" loading="lazy"></iframe>
     </div>
 
+    <!-- ограничения участка -->
+    <div class="view-panel hidden" id="panelZouit">
+      <div class="panel-topbar">
+        <span class="panel-title">Ограничения участка</span>
+      </div>
+      <iframe class="iframe-fill"
+        src="https://dinmel99.github.io/zouit/"
+        title="Ограничения участка" loading="lazy"></iframe>
+    </div>
+
   </div><!-- /content-area -->
 </div><!-- /main -->
 
@@ -498,7 +514,7 @@ document.getElementById('btnEnter').addEventListener('click', ()=>{
 });
 
 /* ===== panel switching ===== */
-const ALL_PANELS = ['panelEmpty','panelSettlementsList','panelSettlementsMap','panelContractorsQuiz','panelContractorsProjects'];
+const ALL_PANELS = ['panelEmpty','panelSettlementsList','panelSettlementsMap','panelContractorsQuiz','panelContractorsProjects','panelZouit'];
 
 function showPanel(id){
   ALL_PANELS.forEach(p=>{
@@ -513,16 +529,19 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
     // toggle active
     document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    // show/hide sub-nav
+    // show/hide sub-nav (у некоторых разделов подменю нет)
     document.querySelectorAll('.sub-nav').forEach(s=>s.classList.add('hidden'));
-    document.getElementById('subNav'+cap(panel)).classList.remove('hidden');
+    const subNav = document.getElementById('subNav'+cap(panel));
+    if(subNav) subNav.classList.remove('hidden');
     // show default sub-view
     if(panel==='settlements'){
       const activeSubView = document.querySelector('#subNavSettlements .sub-nav-item.active')?.dataset.view || 'list';
       showSettlementsView(activeSubView);
-    } else {
+    } else if(panel==='contractors'){
       const activeSubView = document.querySelector('#subNavContractors .sub-nav-item.active')?.dataset.view || 'quiz';
       showContractorsView(activeSubView);
+    } else if(panel==='zouit'){
+      showPanel('panelZouit');
     }
   });
 });
