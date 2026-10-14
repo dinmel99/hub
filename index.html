@@ -407,6 +407,12 @@
         <span class="nav-icon">⚠️</span>
         <span class="nav-label">Ограничения</span>
       </button>
+
+      <!-- Проверка участка -->
+      <button class="nav-item" id="navPlots" data-panel="plots">
+        <span class="nav-icon">📐</span>
+        <span class="nav-label">Проверка участка</span>
+      </button>
     </nav>
 
     <!-- footer / actions -->
@@ -499,6 +505,16 @@
         title="Ограничения участка" loading="lazy"></iframe>
     </div>
 
+    <!-- проверка участка -->
+    <div class="view-panel hidden" id="panelPlots">
+      <div class="panel-topbar">
+        <span class="panel-title">Проверка участка</span>
+      </div>
+      <iframe class="iframe-fill"
+        src="https://dinmel99.github.io/plots/"
+        title="Проверка участка" loading="lazy"></iframe>
+    </div>
+
   </div><!-- /content-area -->
 </div><!-- /main -->
 
@@ -514,7 +530,7 @@ document.getElementById('btnEnter').addEventListener('click', ()=>{
 });
 
 /* ===== panel switching ===== */
-const ALL_PANELS = ['panelEmpty','panelSettlementsList','panelSettlementsMap','panelContractorsQuiz','panelContractorsProjects','panelZouit'];
+const ALL_PANELS = ['panelEmpty','panelSettlementsList','panelSettlementsMap','panelContractorsQuiz','panelContractorsProjects','panelZouit','panelPlots'];
 
 function showPanel(id){
   ALL_PANELS.forEach(p=>{
@@ -542,6 +558,8 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
       showContractorsView(activeSubView);
     } else if(panel==='zouit'){
       showPanel('panelZouit');
+    } else if(panel==='plots'){
+      showPanel('panelPlots');
     }
   });
 });
